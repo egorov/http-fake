@@ -1,0 +1,19 @@
+{
+  "name": "http-fake",
+  "version": "1.0.0",
+  "description": "Fake Node.js http implementation for unit testing",
+  "main": "index.js",
+  "repository": "https://github.com/egorov/http-fake.git",
+  "author": {
+    "name": "Sergey Egorov",
+    "email": "s.e.888@live.ru"
+  },
+  "scripts": {
+    "test": "node node_modules/jasmine/bin/jasmine --config=jasmine.json"
+  },
+  "license": "ISC",
+  "private": false,
+  "devDependencies": {
+    "jasmine": "^3.2.0"
+  }
+}
