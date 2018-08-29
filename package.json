@@ -1,6 +1,6 @@
 {
   "name": "http-fake",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Fake Node.js http implementation for unit testing",
   "main": "index.js",
   "repository": "https://github.com/egorov/http-fake.git",

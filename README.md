@@ -1,6 +1,6 @@
-# Простой эмулятор http запросов для модульных тестов
+# Small Node.js http.request emulator
 
-Как пользоваться?
+I use it in unit tests.
 
     describe('HttpFake', () => {
     
