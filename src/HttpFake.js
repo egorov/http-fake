@@ -84,7 +84,7 @@ class HttpFake {
 
         for(let name in request){
             let msg = `Expected options.${name} == ${request[name]}, actual is ${options[name]}!`;
-            assert.equal(request[name], options[name], msg);
+            assert.deepEqual(request[name], options[name], msg);
         }
     }
 }
