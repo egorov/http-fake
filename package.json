@@ -15,5 +15,8 @@
   "private": false,
   "devDependencies": {
     "jasmine": "^3.2.0"
+  },
+  "dependencies": {
+    "fixed-size-queue": "^1.0.1"
   }
 }

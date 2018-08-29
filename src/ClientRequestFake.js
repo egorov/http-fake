@@ -8,7 +8,7 @@ class ClientRequestFake extends EventEmitter {
     }
 
     end(){
-
+        this.emit('end');
     }
     
     write(data){

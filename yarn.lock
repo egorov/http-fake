@@ -17,6 +17,10 @@ concat-map@0.0.1:
   version "0.0.1"
   resolved "https://registry.yarnpkg.com/concat-map/-/concat-map-0.0.1.tgz#d8a96bd77fd68df7793a73036a3ba0d5405d477b"
 
+fixed-size-queue@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/fixed-size-queue/-/fixed-size-queue-1.0.1.tgz#bbb095d1c0e57e2e151d38d5b860428efed58097"
+
 fs.realpath@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/fs.realpath/-/fs.realpath-1.0.0.tgz#1504ad2523158caa40db4a2787cb01411994ea4f"

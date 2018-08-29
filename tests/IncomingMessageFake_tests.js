@@ -2,17 +2,28 @@ describe('IncomingMessageFake', () => {
 
     const IncomingMessageFake = require('../src/IncomingMessageFake');
     let message = null,
-        headers = {
-            Authorization: 'token',
-            'Content-Type': 'application/json'
+        content = {
+            statusCode: 200,
+            headers: {
+                Authorization: 'token',
+                'Content-Type': 'application/json'
+            },
+            body: {
+                message: 'have been caught'
+            }
         };
 
     beforeEach(() => {
-        message = new IncomingMessageFake(headers);
+        message = new IncomingMessageFake(content);
     });
 
     it('should return headers', () => {
 
-        expect(message.headers).toEqual(headers);
+        expect(message.headers).toEqual(content.headers);
+    });
+
+    it('should return statusCode', () => {
+
+        expect(message.statusCode).toEqual(content.statusCode);
     });
 });

@@ -18,6 +18,9 @@ describe('HttpFake', () => {
             statusCode: 200,
             body: {
                 token: 'value is here'
+            },
+            headers: {
+                'Content-Type': 'application/json'
             }
         };
     let http = null;
@@ -30,16 +33,16 @@ describe('HttpFake', () => {
 
         http.expect(options);
 
-        expect(http.expecting.length).toEqual(1);
-        expect(http.expecting[0]).toEqual(options);
+        expect(http.expecting.getCount()).toEqual(1);
+        expect(http.expecting.peek()).toEqual(options);
     });
 
     it('should add supposed response', () => {
 
         http.returns(response);
 
-        expect(http.willReturn.length).toEqual(1);
-        expect(http.willReturn[0]).toEqual(response);
+        expect(http.willReturn.getCount()).toEqual(1);
+        expect(http.willReturn.peek()).toEqual(response);
     });
 
     it('should return expected response', () => {
@@ -54,6 +57,7 @@ describe('HttpFake', () => {
                 expect(body).toEqual(response.body);
             });
 
+            expect(res.headers).toEqual(response.headers);
             expect(res.statusCode).toEqual(response.statusCode);
         });
 
