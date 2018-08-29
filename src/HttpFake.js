@@ -1,3 +1,5 @@
+const ClientRequestFake = require('./ClientRequestFake');
+
 class HttpFake {
 
     constructor(){
@@ -19,6 +21,11 @@ class HttpFake {
 
     get willReturn(){
         return this._willReturn;
+    }
+
+    request(options, callback){
+        const requestFake = new ClientRequestFake();
+        return requestFake;
     }
 }
 
