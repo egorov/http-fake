@@ -1,8 +1,9 @@
 describe('HttpFake', () => {
 
+    const AssertionError = require('assert').AssertionError;
     const HttpFake = require('../src/HttpFake'),
         options = {
-            url: 'localhost',
+            hostname: 'localhost',
             port: 80,
             path: '/api/users/login',
             body: {
@@ -47,6 +48,7 @@ describe('HttpFake', () => {
 
     it('should return expected response', () => {
 
+        http.expect(options);
         http.returns(response);
 
         const clientRequest = http.request(options, (res) => {
@@ -64,6 +66,27 @@ describe('HttpFake', () => {
         const content = JSON.stringify(options.body);
         clientRequest.write(content);
         clientRequest.end();
+    });
+
+    it('should fall if options does not match', () => {
+
+        http.expect(options);
+        http.returns(response);
+
+        const method = () =>{
+            const clientRequest = http.request({ hostname: '::1'},(res) => {});
+            clientRequest.end();
+        };
+        const msg = 'Expected options.hostname == localhost, actual is ::1!';
+        expect(method).toThrowError(AssertionError, msg);
+    });
+
+    it('request should throw if options is omitted', () => {
+
+        const method = () => {
+            http.request();
+        };
+        expect(method).toThrow(new Error('options should be an object!'));
     });
 
     it('request should throw if callback is omitted', () => {
