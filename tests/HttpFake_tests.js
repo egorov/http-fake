@@ -51,18 +51,26 @@ describe('HttpFake', () => {
 
         const clientRequest = http.request(options, (res) => {
 
+            expect(res.headers).toEqual(response.headers);
+            expect(res.statusCode).toEqual(response.statusCode);
+
             res.on('data', (chunk) => {
 
                 const body = JSON.parse(chunk);
                 expect(body).toEqual(response.body);
             });
-
-            expect(res.headers).toEqual(response.headers);
-            expect(res.statusCode).toEqual(response.statusCode);
         });
 
         const content = JSON.stringify(options.body);
         clientRequest.write(content);
         clientRequest.end();
+    });
+
+    it('request should throw if callback is omitted', () => {
+
+        const method = () => {
+            http.request({});
+        };
+        expect(method).toThrow(new Error('callback is required argument!'));
     });
 });

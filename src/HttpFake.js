@@ -46,10 +46,16 @@ class HttpFake {
     }
 
     run(){
+        'use strict';
+
         const callback = this._callbacks.dequeue();
         const response = this._willReturn.dequeue();
         const message = new IncomingMessage(response);
+
         callback(message);
+
+        const data = JSON.stringify(response.body);
+        message.emit('data', data);
     }
 }
 
