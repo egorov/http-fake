@@ -1,5 +1,6 @@
 const ClientRequestFake = require('./ClientRequestFake');
 const IncomingMessage = require('./IncomingMessageFake');
+const split = require('./SplitStringToChunks');
 const Queue = require('fixed-size-queue');
 const assert = require('assert');
 
@@ -75,7 +76,13 @@ class HttpFake {
         callback(message);
 
         const data = JSON.stringify(response.body);
-        message.emit('data', data);
+        const chunks = split(data, 10);
+
+        for(let i = 0; i < chunks.length; i++){
+            message.emit('data', chunks[i]);
+        }
+
+        message.emit('end');
     }
 
     _checkRequestOptions(){

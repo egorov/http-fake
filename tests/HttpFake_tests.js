@@ -56,9 +56,16 @@ describe('HttpFake', () => {
             expect(res.headers).toEqual(response.headers);
             expect(res.statusCode).toEqual(response.statusCode);
 
+            let incomingData = '';
+
             res.on('data', (chunk) => {
 
-                const body = JSON.parse(chunk);
+                incomingData += chunk;
+            });
+
+            res.on('end', () => {
+
+                const body = JSON.parse(incomingData);
                 expect(body).toEqual(response.body);
             });
         });
