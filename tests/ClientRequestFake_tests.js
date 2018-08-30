@@ -29,4 +29,25 @@ describe('ClientRequestFake', () => {
 
         expect(typeof request.write).toEqual('function');
     });
+
+    it('should emit write event', () => {
+
+        let messages = [],
+            msg = 'Hello!';
+
+        request.on('write', (data) => messages.push(data));
+        request.write(msg);
+
+        expect(messages.length).toEqual(1);
+        expect(messages[0]).toEqual(msg);
+    });
+
+    it('should emit end event', () => {
+
+        let counter = 0;
+        request.on('end', () => counter++);
+        request.end();
+
+        expect(counter).toEqual(1);
+    });
 });

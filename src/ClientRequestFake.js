@@ -12,7 +12,7 @@ class ClientRequestFake extends EventEmitter {
     }
     
     write(data){
-
+        this.emit('write', data);
     }
 }
 

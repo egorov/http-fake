@@ -7,20 +7,25 @@ const assert = require('assert');
 class HttpFake {
 
     constructor(){
-        this._expecting = Queue.create(1000);
-        this._actual = Queue.create(1000);
+        this._expectedOptions = Queue.create(1000);
+        this._actualOptions = Queue.create(1000);
+        this._expectedBodies = Queue.create(1000);
         this._willReturn = Queue.create(1000);
         this._callbacks = Queue.create(1000);
     }
 
     expect(request){
         'use strict';
-        this._expecting.enqueue(request);
+        if((typeof request.body) !== 'undefined'){
+            const body = request.body;
+            this._expectedBodies.enqueue(body);
+        }
+        this._expectedOptions.enqueue(request);
     }
 
     get expecting(){
         'use strict';
-        return this._expecting;
+        return this._expectedOptions;
     }
 
     returns(response){
@@ -41,11 +46,14 @@ class HttpFake {
 
         const requestFake = new ClientRequestFake();
 
-        this._actual.enqueue(options);
+        this._actualOptions.enqueue(options);
         this._callbacks.enqueue(callback);
 
-        const handler = this.run.bind(this);
-        requestFake.on('end', handler);
+        const requestHandler = this._handleWithRequest.bind(this);
+        requestFake.on('end', requestHandler);
+
+        const bodyCheckHandler = this._checkRequestBody.bind(this);
+        requestFake.on('write', bodyCheckHandler);
 
         return requestFake;
     }
@@ -64,7 +72,7 @@ class HttpFake {
             throw new Error('callback is required argument!')
     }
 
-    run(){
+    _handleWithRequest(){
         'use strict';
 
         this._checkRequestOptions();
@@ -85,13 +93,27 @@ class HttpFake {
         message.emit('end');
     }
 
-    _checkRequestOptions(){
-        const request = this._expecting.dequeue();
-        const options = this._actual.dequeue();
+    _checkRequestBody(actual){
+        'use strict';
+        const body = this._expectedBodies.dequeue();
+        const expected = JSON.stringify(body);
+        const msg = `Expected body content ${expected}, but actual content is ${actual}`;
+        assert.equal(expected, actual, msg);
+    }
 
-        for(let name in request){
-            let msg = `Expected options.${name} == ${request[name]}, actual is ${options[name]}!`;
-            assert.deepEqual(request[name], options[name], msg);
+    _checkRequestOptions(){
+        const expect = this._expectedOptions.dequeue();
+        const actual = this._actualOptions.dequeue();
+
+        for(let name in expect){
+
+            if(name === 'body')
+                continue;
+
+            let msg =   'Expected options.' + name +
+                        ' == ' + expect[name] +
+                        ', actual is ' + actual[name] + '!';
+            assert.deepEqual(expect[name], actual[name], msg);
         }
     }
 }
