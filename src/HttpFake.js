@@ -17,6 +17,7 @@ class HttpFake {
 
     expect(request){
         'use strict';
+
         if((typeof request.body) !== 'undefined'){
             const body = request.body;
             this._expectedBodies.enqueue(body);
@@ -26,24 +27,47 @@ class HttpFake {
 
     returns(response){
         'use strict';
+
         this._willReturn.enqueue(response);
     }
 
     shouldEmit(error){
+        'use strict';
+
         this._expectedErrors.enqueue(error);
     }
 
     request(options, callback){
         'use strict';
 
-        this._validateOptions(options);
-        this._validateCallback(callback);
+        this._saveOptions(options);
+        this._saveCallback(callback);
 
-        const requestFake = new ClientRequestFake();
+        return this._makeRequest();
+    }
+
+    _saveOptions(options){
+        'use strict';
+
+        if((typeof options) !== 'object')
+            throw new Error('options should be an object!');
 
         this._actualOptions.enqueue(options);
-        this._callbacks.enqueue(callback);
+    }
 
+    _saveCallback(callback){
+        'use strict';
+
+        if((typeof callback) !== 'function')
+            throw new Error('callback is required argument!')
+
+        this._callbacks.enqueue(callback);
+    }
+
+    _makeRequest(){
+        'use strict';
+
+        const requestFake = new ClientRequestFake();
         const requestHandler = this._handleWithRequest.bind(this);
         requestFake.on('end', requestHandler);
 
@@ -51,20 +75,6 @@ class HttpFake {
         requestFake.on('write', bodyCheckHandler);
 
         return requestFake;
-    }
-
-    _validateOptions(options){
-        'use strict';
-
-        if((typeof options) !== 'object')
-            throw new Error('options should be an object!');
-    }
-
-    _validateCallback(callback){
-        'use strict';
-
-        if((typeof callback) !== 'function')
-            throw new Error('callback is required argument!')
     }
 
     _handleWithRequest(){
