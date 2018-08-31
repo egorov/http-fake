@@ -24,19 +24,9 @@ class HttpFake {
         this._expectedOptions.enqueue(request);
     }
 
-    get expecting(){
-        'use strict';
-        return this._expectedOptions;
-    }
-
     returns(response){
         'use strict';
         this._willReturn.enqueue(response);
-    }
-
-    get willReturn(){
-        'use strict';
-        return this._willReturn;
     }
 
     shouldEmit(error){

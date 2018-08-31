@@ -30,22 +30,6 @@ describe('HttpFake', () => {
        http = new HttpFake();
     });
 
-    it('should add expected request options', () => {
-
-        http.expect(options);
-
-        expect(http.expecting.getCount()).toEqual(1);
-        expect(http.expecting.peek()).toEqual(options);
-    });
-
-    it('should add supposed response', () => {
-
-        http.returns(response);
-
-        expect(http.willReturn.getCount()).toEqual(1);
-        expect(http.willReturn.peek()).toEqual(response);
-    });
-
     it('should return expected response', () => {
 
         http.expect(options);
