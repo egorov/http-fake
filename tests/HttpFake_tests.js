@@ -75,6 +75,22 @@ describe('HttpFake', () => {
         clientRequest.end();
     });
 
+    it('should expect error', () => {
+
+        http.expect(options);
+        http.shouldThrow(new Error('Something goes wrong!'));
+
+        const clientRequest = http.request(options, (res) => {
+
+            res.on('error', (error) => {
+
+                expect(error.message).toEqual('Something goes wrong!');
+            });
+        });
+
+        clientRequest.end();
+    });
+
     it('should fall if options does not match', () => {
 
         http.expect(options);

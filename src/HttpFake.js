@@ -10,6 +10,7 @@ class HttpFake {
         this._expectedOptions = Queue.create(1000);
         this._actualOptions = Queue.create(1000);
         this._expectedBodies = Queue.create(1000);
+        this._expectedErrors = Queue.create(1000);
         this._willReturn = Queue.create(1000);
         this._callbacks = Queue.create(1000);
     }
@@ -36,6 +37,10 @@ class HttpFake {
     get willReturn(){
         'use strict';
         return this._willReturn;
+    }
+
+    shouldThrow(error){
+        this._expectedErrors.enqueue(error);
     }
 
     request(options, callback){
@@ -74,6 +79,15 @@ class HttpFake {
 
     _handleWithRequest(){
         'use strict';
+
+        if(this._expectedErrors.getCount() > 0){
+            const callback = this._callbacks.dequeue();
+            const error = this._expectedErrors.dequeue();
+            const message = new IncomingMessage();
+            callback(message);
+            message.emit('error', error);
+            return;
+        }
 
         this._checkRequestOptions();
 
