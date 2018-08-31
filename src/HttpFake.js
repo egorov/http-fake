@@ -39,7 +39,7 @@ class HttpFake {
         return this._willReturn;
     }
 
-    shouldThrow(error){
+    shouldEmit(error){
         this._expectedErrors.enqueue(error);
     }
 
@@ -80,16 +80,16 @@ class HttpFake {
     _handleWithRequest(){
         'use strict';
 
-        if(this._expectedErrors.getCount() > 0){
-            const callback = this._callbacks.dequeue();
-            const error = this._expectedErrors.dequeue();
-            const message = new IncomingMessage();
-            callback(message);
-            message.emit('error', error);
-            return;
-        }
-
+        this._tryToImitateRequestHandling();
+        this._tryToImitateResponseError();
         this._checkRequestOptions();
+    }
+
+    _tryToImitateRequestHandling(){
+        'use strict';
+
+        if(this._expectedErrors.getCount() > 0)
+            return;
 
         const callback = this._callbacks.dequeue();
         const response = this._willReturn.dequeue();
@@ -107,12 +107,17 @@ class HttpFake {
         message.emit('end');
     }
 
-    _checkRequestBody(actual){
+    _tryToImitateResponseError(){
         'use strict';
-        const body = this._expectedBodies.dequeue();
-        const expected = JSON.stringify(body);
-        const msg = `Expected body content ${expected}, but actual content is ${actual}`;
-        assert.equal(expected, actual, msg);
+
+        if(this._expectedErrors.getCount() == 0)
+            return;
+
+        const callback = this._callbacks.dequeue();
+        const error = this._expectedErrors.dequeue();
+        const message = new IncomingMessage();
+        callback(message);
+        message.emit('error', error);
     }
 
     _checkRequestOptions(){
@@ -129,6 +134,15 @@ class HttpFake {
                         ', actual is ' + actual[name] + '!';
             assert.deepEqual(expect[name], actual[name], msg);
         }
+    }
+
+    _checkRequestBody(actual){
+        'use strict';
+
+        const body = this._expectedBodies.dequeue();
+        const expected = JSON.stringify(body);
+        const msg = `Expected body content ${expected}, but actual content is ${actual}`;
+        assert.equal(expected, actual, msg);
     }
 }
 
