@@ -62,7 +62,7 @@ describe('HttpFake', () => {
     it('should emit response error', () => {
 
         http.expect(options);
-        http.shouldEmit(new Error('Something goes wrong!'));
+        http.shouldThrow(new Error('Something goes wrong!'));
 
         const clientRequest = http.request(options, (res) => {
 

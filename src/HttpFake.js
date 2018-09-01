@@ -1,18 +1,21 @@
-const ClientRequestFake = require('./ClientRequestFake');
-const IncomingMessage = require('./IncomingMessageFake');
-const split = require('./SplitStringToChunks');
-const Queue = require('fixed-size-queue');
-const assert = require('assert');
+const ClientRequestFake = require('./ClientRequestFake'),
+    IncomingMessage = require('./IncomingMessageFake'),
+    split = require('./SplitStringToChunks'),
+    Queue = require('fixed-size-queue'),
+    assert = require('assert'),
+    RespErrorCmd = require('./ResponseErrorCommand');
 
 class HttpFake {
 
     constructor(){
-        this._expectedOptions = Queue.create(1000);
-        this._actualOptions = Queue.create(1000);
-        this._expectedBodies = Queue.create(1000);
-        this._expectedErrors = Queue.create(1000);
+        this._expOptions = Queue.create(1000);
+        this._actOptions = Queue.create(1000);
+        this._expBodies = Queue.create(1000);
+        this._errors = Queue.create(1000);
         this._willReturn = Queue.create(1000);
         this._callbacks = Queue.create(1000);
+        this._responseErrorCommand =
+            new RespErrorCmd(this._errors, this._callbacks);
     }
 
     expect(request){
@@ -20,9 +23,9 @@ class HttpFake {
 
         if((typeof request.body) !== 'undefined'){
             const body = request.body;
-            this._expectedBodies.enqueue(body);
+            this._expBodies.enqueue(body);
         }
-        this._expectedOptions.enqueue(request);
+        this._expOptions.enqueue(request);
     }
 
     returns(response){
@@ -31,10 +34,10 @@ class HttpFake {
         this._willReturn.enqueue(response);
     }
 
-    shouldEmit(error){
+    shouldThrow(error){
         'use strict';
 
-        this._expectedErrors.enqueue(error);
+        this._errors.enqueue(error);
     }
 
     request(options, callback){
@@ -52,7 +55,7 @@ class HttpFake {
         if((typeof options) !== 'object')
             throw new Error('options should be an object!');
 
-        this._actualOptions.enqueue(options);
+        this._actOptions.enqueue(options);
     }
 
     _saveCallback(callback){
@@ -81,14 +84,14 @@ class HttpFake {
         'use strict';
 
         this._tryToImitateRequestHandling();
-        this._tryToImitateResponseError();
+        this._responseErrorCommand.execute();
         this._checkRequestOptions();
     }
 
     _tryToImitateRequestHandling(){
         'use strict';
 
-        if(this._expectedErrors.getCount() > 0)
+        if(this._errors.getCount() > 0)
             return;
 
         const callback = this._callbacks.dequeue();
@@ -107,22 +110,9 @@ class HttpFake {
         message.emit('end');
     }
 
-    _tryToImitateResponseError(){
-        'use strict';
-
-        if(this._expectedErrors.getCount() == 0)
-            return;
-
-        const callback = this._callbacks.dequeue();
-        const error = this._expectedErrors.dequeue();
-        const message = new IncomingMessage();
-        callback(message);
-        message.emit('error', error);
-    }
-
     _checkRequestOptions(){
-        const expect = this._expectedOptions.dequeue();
-        const actual = this._actualOptions.dequeue();
+        const expect = this._expOptions.dequeue();
+        const actual = this._actOptions.dequeue();
 
         for(let name in expect){
 
@@ -139,7 +129,7 @@ class HttpFake {
     _checkRequestBody(actual){
         'use strict';
 
-        const body = this._expectedBodies.dequeue();
+        const body = this._expBodies.dequeue();
         const expected = JSON.stringify(body);
         const msg = `Expected body content ${expected}, but actual content is ${actual}`;
         assert.equal(expected, actual, msg);
