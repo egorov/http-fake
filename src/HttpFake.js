@@ -2,9 +2,9 @@ const ClientRequestFake = require('./ClientRequestFake'),
     IncomingMessage = require('./IncomingMessageFake'),
     split = require('./SplitStringToChunks'),
     Queue = require('fixed-size-queue'),
-    assert = require('assert'),
     RespErrorCmd = require('./ResponseErrorCommand'),
-    OptnsMatchCmd = require('./RequestOptionsMatchCommand');
+    OptnsMatchCmd = require('./RequestOptionsMatchCommand'),
+    ReqBodyMatchHndlr = require('./RequestBodyMatchHandler');
 
 class HttpFake {
 
@@ -19,6 +19,8 @@ class HttpFake {
             new RespErrorCmd(this._errors, this._callbacks);
         this._optionsMatchCommand =
             new OptnsMatchCmd(this._expOptions, this._actOptions);
+        this._bodyMatchHandler =
+            new ReqBodyMatchHndlr(this._expBodies);
     }
 
     expect(request){
@@ -77,7 +79,8 @@ class HttpFake {
         const requestHandler = this._handleWithRequest.bind(this);
         requestFake.on('end', requestHandler);
 
-        const bodyCheckHandler = this._checkRequestBody.bind(this);
+        const bodyCheckHandler =
+            this._bodyMatchHandler.handle.bind(this._bodyMatchHandler);
         requestFake.on('write', bodyCheckHandler);
 
         return requestFake;
@@ -111,15 +114,6 @@ class HttpFake {
         }
 
         message.emit('end');
-    }
-
-    _checkRequestBody(actual){
-        'use strict';
-
-        const body = this._expBodies.dequeue();
-        const expected = JSON.stringify(body);
-        const msg = `Expected body content ${expected}, but actual content is ${actual}`;
-        assert.equal(expected, actual, msg);
     }
 }
 
