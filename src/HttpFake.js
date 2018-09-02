@@ -3,7 +3,8 @@ const ClientRequestFake = require('./ClientRequestFake'),
     split = require('./SplitStringToChunks'),
     Queue = require('fixed-size-queue'),
     assert = require('assert'),
-    RespErrorCmd = require('./ResponseErrorCommand');
+    RespErrorCmd = require('./ResponseErrorCommand'),
+    OptnsMatchCmd = require('./RequestOptionsMatchCommand');
 
 class HttpFake {
 
@@ -16,6 +17,8 @@ class HttpFake {
         this._callbacks = Queue.create(1000);
         this._responseErrorCommand =
             new RespErrorCmd(this._errors, this._callbacks);
+        this._optionsMatchCommand =
+            new OptnsMatchCmd(this._expOptions, this._actOptions);
     }
 
     expect(request){
@@ -85,7 +88,7 @@ class HttpFake {
 
         this._tryToImitateRequestHandling();
         this._responseErrorCommand.execute();
-        this._checkRequestOptions();
+        this._optionsMatchCommand.execute();
     }
 
     _tryToImitateRequestHandling(){
@@ -108,22 +111,6 @@ class HttpFake {
         }
 
         message.emit('end');
-    }
-
-    _checkRequestOptions(){
-        const expect = this._expOptions.dequeue();
-        const actual = this._actOptions.dequeue();
-
-        for(let name in expect){
-
-            if(name === 'body')
-                continue;
-
-            let msg =   'Expected options.' + name +
-                        ' == ' + expect[name] +
-                        ', actual is ' + actual[name] + '!';
-            assert.deepEqual(expect[name], actual[name], msg);
-        }
     }
 
     _checkRequestBody(actual){
