@@ -59,17 +59,34 @@ describe('HttpFake', () => {
         clientRequest.end();
     });
 
-    it('should emit response error', () => {
+    it('should emit response error', (done) => {
 
         http.expect(options);
-        http.shouldThrow(new Error('Something goes wrong!'));
+        http.responseThrow(new Error('Something goes wrong!'));
 
         const clientRequest = http.request(options, (res) => {
 
             res.on('error', (error) => {
 
                 expect(error.message).toEqual('Something goes wrong!');
+                done();
             });
+        });
+
+        clientRequest.end();
+    });
+
+    it('should emit request error', (done) => {
+
+        const msg = 'Something goes wrong!';
+        http.expect(options);
+        http.requestThrow(new Error(msg));
+
+        const clientRequest = http.request(options, (res) => {});
+        clientRequest.on('error', (error) => {
+
+            expect(error.message).toEqual(msg);
+            done();
         });
 
         clientRequest.end();
