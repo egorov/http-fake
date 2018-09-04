@@ -13,7 +13,7 @@ class HttpFake {
         this._queues = new Storage();
 
         this._responseErrorCommand = new ResponseErrorCommand(
-            this._queues.errorsExpected,
+            this._queues.responseErrors,
             this._queues.callbacks);
 
         this._optionsMatchCommand = new OptionsMatchCommand(
@@ -22,6 +22,8 @@ class HttpFake {
 
         this._bodyMatchHandler = new RequestBodyMatchHandler(
             this._queues.bodiesExpected);
+
+        this._request = null;
     }
 
     expect(request){
@@ -40,10 +42,16 @@ class HttpFake {
         this._queues.responsesExpected.enqueue(response);
     }
 
-    shouldThrow(error){
+    responseThrow(error){
         'use strict';
 
-        this._queues.errorsExpected.enqueue(error);
+        this._queues.responseErrors.enqueue(error);
+    }
+
+    requestThrow(error){
+        'use strict';
+
+        this._queues.requestErrors.enqueue(error);
     }
 
     request(options, callback){
@@ -76,21 +84,22 @@ class HttpFake {
     _makeRequest(){
         'use strict';
 
-        const requestFake = new ClientRequestFake();
+        this._request = new ClientRequestFake();
         const requestHandler = this._handleWithRequest.bind(this);
-        requestFake.on('end', requestHandler);
+        this._request.on('end', requestHandler);
 
         const bodyCheckHandler =
             this._bodyMatchHandler.handle.bind(this._bodyMatchHandler);
-        requestFake.on('write', bodyCheckHandler);
+        this._request.on('write', bodyCheckHandler);
 
-        return requestFake;
+        return this._request;
     }
 
     _handleWithRequest(){
         'use strict';
 
         this._tryToImitateRequestHandling();
+        this._imitateRequestError();
         this._responseErrorCommand.execute();
         this._optionsMatchCommand.execute();
     }
@@ -98,7 +107,10 @@ class HttpFake {
     _tryToImitateRequestHandling(){
         'use strict';
 
-        if(this._queues.errorsExpected.getCount() > 0)
+        if(this._queues.responseErrors.getCount() > 0)
+            return;
+
+        if(this._queues.requestErrors.getCount() > 0)
             return;
 
         const callback = this._queues.callbacks.dequeue();
@@ -115,6 +127,16 @@ class HttpFake {
         }
 
         message.emit('end');
+    }
+
+    _imitateRequestError(){
+        'use strict';
+
+        if(this._queues.requestErrors.getCount() === 0)
+            return;
+
+        const error = this._queues.requestErrors.dequeue();
+        this._request.emit('error', error);
     }
 }
 

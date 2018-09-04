@@ -19,10 +19,16 @@ describe('Storage', () => {
         expect(queues.bodiesExpected.getCapacity()).toEqual(10);
     });
 
-    it('should contain errors queues', () => {
+    it('should contain response errors queues', () => {
 
-        expect(queues.errorsExpected.getCount()).toEqual(0);
-        expect(queues.errorsExpected.getCapacity()).toEqual(10);
+        expect(queues.responseErrors.getCount()).toEqual(0);
+        expect(queues.responseErrors.getCapacity()).toEqual(10);
+    });
+
+    it('should contain request errors queues', () => {
+
+        expect(queues.requestErrors.getCount()).toEqual(0);
+        expect(queues.requestErrors.getCapacity()).toEqual(10);
     });
 
     it('should contain responses queues', () => {

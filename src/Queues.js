@@ -6,7 +6,8 @@ class Queues {
         this._optionsExpected = Queue.create(10);
         this._optionsActual = Queue.create(10);
         this._bodiesExpected = Queue.create(10);
-        this._errorsExpected = Queue.create(10);
+        this._responseErrors = Queue.create(10);
+        this._requestErrors = Queue.create(10);
         this._responsesExpected = Queue.create(10);
         this._callbacks = Queue.create(10);
     }
@@ -26,9 +27,14 @@ class Queues {
         return this._bodiesExpected;
     }
 
-    get errorsExpected(){
+    get responseErrors(){
         'use strict';
-        return this._errorsExpected;
+        return this._responseErrors;
+    }
+
+    get requestErrors(){
+        'use strict';
+        return this._requestErrors;
     }
 
     get responsesExpected(){
