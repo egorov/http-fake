@@ -1,26 +1,27 @@
 const ClientRequestFake = require('./ClientRequestFake'),
     IncomingMessage = require('./IncomingMessageFake'),
     split = require('./SplitStringToChunks'),
-    Queue = require('fixed-size-queue'),
-    RespErrorCmd = require('./ResponseErrorCommand'),
-    OptnsMatchCmd = require('./RequestOptionsMatchCommand'),
-    ReqBodyMatchHndlr = require('./RequestBodyMatchHandler');
+    ResponseErrorCommand = require('./ResponseErrorCommand'),
+    OptionsMatchCommand = require('./RequestOptionsMatchCommand'),
+    RequestBodyMatchHandler = require('./RequestBodyMatchHandler'),
+    Storage = require('./Queues');
 
 class HttpFake {
 
     constructor(){
-        this._expOptions = Queue.create(1000);
-        this._actOptions = Queue.create(1000);
-        this._expBodies = Queue.create(1000);
-        this._errors = Queue.create(1000);
-        this._willReturn = Queue.create(1000);
-        this._callbacks = Queue.create(1000);
-        this._responseErrorCommand =
-            new RespErrorCmd(this._errors, this._callbacks);
-        this._optionsMatchCommand =
-            new OptnsMatchCmd(this._expOptions, this._actOptions);
-        this._bodyMatchHandler =
-            new ReqBodyMatchHndlr(this._expBodies);
+
+        this._queues = new Storage();
+
+        this._responseErrorCommand = new ResponseErrorCommand(
+            this._queues.errorsExpected,
+            this._queues.callbacks);
+
+        this._optionsMatchCommand = new OptionsMatchCommand(
+            this._queues.optionsExpected,
+            this._queues.optionsActual);
+
+        this._bodyMatchHandler = new RequestBodyMatchHandler(
+            this._queues.bodiesExpected);
     }
 
     expect(request){
@@ -28,21 +29,21 @@ class HttpFake {
 
         if((typeof request.body) !== 'undefined'){
             const body = request.body;
-            this._expBodies.enqueue(body);
+            this._queues.bodiesExpected.enqueue(body);
         }
-        this._expOptions.enqueue(request);
+        this._queues.optionsExpected.enqueue(request);
     }
 
     returns(response){
         'use strict';
 
-        this._willReturn.enqueue(response);
+        this._queues.responsesExpected.enqueue(response);
     }
 
     shouldThrow(error){
         'use strict';
 
-        this._errors.enqueue(error);
+        this._queues.errorsExpected.enqueue(error);
     }
 
     request(options, callback){
@@ -60,7 +61,7 @@ class HttpFake {
         if((typeof options) !== 'object')
             throw new Error('options should be an object!');
 
-        this._actOptions.enqueue(options);
+        this._queues.optionsActual.enqueue(options);
     }
 
     _saveCallback(callback){
@@ -69,7 +70,7 @@ class HttpFake {
         if((typeof callback) !== 'function')
             throw new Error('callback is required argument!')
 
-        this._callbacks.enqueue(callback);
+        this._queues.callbacks.enqueue(callback);
     }
 
     _makeRequest(){
@@ -97,11 +98,11 @@ class HttpFake {
     _tryToImitateRequestHandling(){
         'use strict';
 
-        if(this._errors.getCount() > 0)
+        if(this._queues.errorsExpected.getCount() > 0)
             return;
 
-        const callback = this._callbacks.dequeue();
-        const response = this._willReturn.dequeue();
+        const callback = this._queues.callbacks.dequeue();
+        const response = this._queues.responsesExpected.dequeue();
         const message = new IncomingMessage(response);
 
         callback(message);
