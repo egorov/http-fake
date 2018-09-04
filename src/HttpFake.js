@@ -2,6 +2,7 @@ const ClientRequestFake = require('./ClientRequestFake'),
     IncomingMessage = require('./IncomingMessageFake'),
     split = require('./SplitStringToChunks'),
     ResponseErrorCommand = require('./ResponseErrorCommand'),
+    RequestErrorCommand = require('./RequestErrorCommand'),
     OptionsMatchCommand = require('./RequestOptionsMatchCommand'),
     RequestBodyMatchHandler = require('./RequestBodyMatchHandler'),
     Storage = require('./Queues');
@@ -23,7 +24,12 @@ class HttpFake {
         this._bodyMatchHandler = new RequestBodyMatchHandler(
             this._queues.bodiesExpected);
 
-        this._request = null;
+        this._request = new ClientRequestFake();
+
+        this._requestErrorCommand = new RequestErrorCommand(
+            this._queues.requestErrors,
+            this._request
+        );
     }
 
     expect(request){
@@ -84,7 +90,6 @@ class HttpFake {
     _makeRequest(){
         'use strict';
 
-        this._request = new ClientRequestFake();
         const requestHandler = this._handleWithRequest.bind(this);
         this._request.on('end', requestHandler);
 
@@ -99,7 +104,7 @@ class HttpFake {
         'use strict';
 
         this._tryToImitateRequestHandling();
-        this._imitateRequestError();
+        this._requestErrorCommand.execute();
         this._responseErrorCommand.execute();
         this._optionsMatchCommand.execute();
     }
@@ -127,16 +132,6 @@ class HttpFake {
         }
 
         message.emit('end');
-    }
-
-    _imitateRequestError(){
-        'use strict';
-
-        if(this._queues.requestErrors.getCount() === 0)
-            return;
-
-        const error = this._queues.requestErrors.dequeue();
-        this._request.emit('error', error);
     }
 }
 
