@@ -1,6 +1,5 @@
 const ClientRequestFake = require('./ClientRequestFake'),
-    IncomingMessage = require('./IncomingMessageFake'),
-    split = require('./SplitStringToChunks'),
+    ResponseSendCommand = require('./ResponseSendCommand'),
     ResponseErrorCommand = require('./ResponseErrorCommand'),
     RequestErrorCommand = require('./RequestErrorCommand'),
     OptionsMatchCommand = require('./RequestOptionsMatchCommand'),
@@ -12,6 +11,8 @@ class HttpFake {
     constructor(){
 
         this._queues = new Storage();
+
+        this._responseSendCommand = new ResponseSendCommand(this._queues);
 
         this._responseErrorCommand = new ResponseErrorCommand(
             this._queues.responseErrors,
@@ -103,35 +104,10 @@ class HttpFake {
     _handleWithRequest(){
         'use strict';
 
-        this._tryToImitateRequestHandling();
+        this._responseSendCommand.execute();
         this._requestErrorCommand.execute();
         this._responseErrorCommand.execute();
         this._optionsMatchCommand.execute();
-    }
-
-    _tryToImitateRequestHandling(){
-        'use strict';
-
-        if(this._queues.responseErrors.getCount() > 0)
-            return;
-
-        if(this._queues.requestErrors.getCount() > 0)
-            return;
-
-        const callback = this._queues.callbacks.dequeue();
-        const response = this._queues.responsesExpected.dequeue();
-        const message = new IncomingMessage(response);
-
-        callback(message);
-
-        const data = JSON.stringify(response.body);
-        const chunks = split(data, 10);
-
-        for(let i = 0; i < chunks.length; i++){
-            message.emit('data', chunks[i]);
-        }
-
-        message.emit('end');
     }
 }
 
