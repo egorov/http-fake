@@ -120,4 +120,12 @@ describe('HttpFake', () => {
         };
         expect(method).toThrow(new Error('callback is required argument!'));
     });
+
+    it('should make expressjs response fake', () => {
+
+        const res = HttpFake.makeExpressResponseFake();
+
+        expect(typeof res.send).toEqual('function');
+        expect(typeof res.status).toEqual('function');
+    });
 });

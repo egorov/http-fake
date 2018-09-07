@@ -4,6 +4,7 @@ const ClientRequestFake = require('./ClientRequestFake'),
     RequestErrorCommand = require('./RequestErrorCommand'),
     OptionsMatchCommand = require('./RequestOptionsMatchCommand'),
     RequestBodyMatchHandler = require('./RequestBodyMatchHandler'),
+    ExpressResponseFake = require('./ExpressResponseFake'),
     Storage = require('./Queues');
 
 class HttpFake {
@@ -108,6 +109,12 @@ class HttpFake {
         this._requestErrorCommand.execute();
         this._responseErrorCommand.execute();
         this._optionsMatchCommand.execute();
+    }
+
+    static makeExpressResponseFake(){
+        'use strict';
+
+        return new ExpressResponseFake();
     }
 }
 
