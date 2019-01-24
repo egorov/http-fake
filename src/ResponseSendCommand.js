@@ -19,6 +19,11 @@ const IncomingMessage = require('./IncomingMessageFake'),
 
         callback(message);
 
+        if(typeof response.body === 'undefined'){
+            message.emit('end');
+            return;
+        }
+
         const data = JSON.stringify(response.body);
         const chunks = split(data, 10);
 

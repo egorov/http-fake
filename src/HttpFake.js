@@ -92,6 +92,9 @@ class HttpFake {
     _makeRequest(){
         'use strict';
 
+        this._request.removeAllListeners('end');
+        this._request.removeAllListeners('write');
+      
         const requestHandler = this._handleWithRequest.bind(this);
         this._request.on('end', requestHandler);
 

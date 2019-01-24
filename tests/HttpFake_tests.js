@@ -59,6 +59,35 @@ describe('HttpFake', () => {
         clientRequest.end();
     });
 
+    it('should deal with empty POST body request', () => {
+
+        const opts = Object.assign({}, options);
+        delete opts.body;
+        
+        http.expect(opts);
+        http.returns({ statusCode: 200 });
+
+        const clientRequest = http.request(opts, (res) => {
+
+            expect(res.statusCode).toEqual(response.statusCode);
+
+            let incomingData = '';
+
+            res.on('data', (chunk) => {
+
+                incomingData += chunk;
+            });
+
+            res.on('end', () => {
+
+                expect(incomingData).toEqual('');
+            });
+        });
+
+        clientRequest.write();
+        clientRequest.end();
+    });
+
     it('should emit response error', (done) => {
 
         http.expect(options);

@@ -1,5 +1,4 @@
-const Queue = require('fixed-size-queue'),
-    assert = require('assert');
+const assert = require('assert');
 
 class RequestBodyMatchHandler {
     constructor(expectedBodies){
@@ -9,7 +8,11 @@ class RequestBodyMatchHandler {
     handle(actual){
         'use strict';
 
-        const body = this._expected.dequeue();
+        let body;
+
+        if(typeof actual !== 'undefined')
+            body = this._expected.dequeue();
+
         const expected = JSON.stringify(body);
         const msg = `Expected body content ${expected}, but actual content is ${actual}`;
         assert.equal(expected, actual, msg);
