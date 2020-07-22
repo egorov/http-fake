@@ -1,45 +1,54 @@
 describe('Storage', () => {
-    'use strict';
+  'use strict';
 
-    const Queues = require('../src/Queues'),
-        queues = new Queues();
+  const Queues = require('../src/Queues'),
+    queues = new Queues();
 
-    it('should contain options queues', () => {
+  it('should contain urls queues', () => {
 
-        expect(queues.optionsExpected.getCount()).toEqual(0);
-        expect(queues.optionsExpected.getCapacity()).toEqual(10);
+    expect(queues.urlsExpected.getCount()).toEqual(0);
+    expect(queues.urlsExpected.getCapacity()).toEqual(10);
 
-        expect(queues.optionsActual.getCount()).toEqual(0);
-        expect(queues.optionsActual.getCapacity()).toEqual(10);
-    });
+    expect(queues.urlsActual.getCount()).toEqual(0);
+    expect(queues.urlsActual.getCapacity()).toEqual(10);
+  });
 
-    it('should contain bodies queues', () => {
+  it('should contain options queues', () => {
 
-        expect(queues.bodiesExpected.getCount()).toEqual(0);
-        expect(queues.bodiesExpected.getCapacity()).toEqual(10);
-    });
+    expect(queues.optionsExpected.getCount()).toEqual(0);
+    expect(queues.optionsExpected.getCapacity()).toEqual(10);
 
-    it('should contain response errors queues', () => {
+    expect(queues.optionsActual.getCount()).toEqual(0);
+    expect(queues.optionsActual.getCapacity()).toEqual(10);
+  });
 
-        expect(queues.responseErrors.getCount()).toEqual(0);
-        expect(queues.responseErrors.getCapacity()).toEqual(10);
-    });
+  it('should contain bodies queues', () => {
 
-    it('should contain request errors queues', () => {
+    expect(queues.bodiesExpected.getCount()).toEqual(0);
+    expect(queues.bodiesExpected.getCapacity()).toEqual(10);
+  });
 
-        expect(queues.requestErrors.getCount()).toEqual(0);
-        expect(queues.requestErrors.getCapacity()).toEqual(10);
-    });
+  it('should contain response errors queues', () => {
 
-    it('should contain responses queues', () => {
+    expect(queues.responseErrors.getCount()).toEqual(0);
+    expect(queues.responseErrors.getCapacity()).toEqual(10);
+  });
 
-        expect(queues.responsesExpected.getCount()).toEqual(0);
-        expect(queues.responsesExpected.getCapacity()).toEqual(10);
-    });
+  it('should contain request errors queues', () => {
 
-    it('should contain callbacks queues', () => {
+    expect(queues.requestErrors.getCount()).toEqual(0);
+    expect(queues.requestErrors.getCapacity()).toEqual(10);
+  });
 
-        expect(queues.callbacks.getCount()).toEqual(0);
-        expect(queues.callbacks.getCapacity()).toEqual(10);
-    });
+  it('should contain responses queues', () => {
+
+    expect(queues.responsesExpected.getCount()).toEqual(0);
+    expect(queues.responsesExpected.getCapacity()).toEqual(10);
+  });
+
+  it('should contain callbacks queues', () => {
+
+    expect(queues.callbacks.getCount()).toEqual(0);
+    expect(queues.callbacks.getCapacity()).toEqual(10);
+  });
 });

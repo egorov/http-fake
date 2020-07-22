@@ -34,7 +34,21 @@ class HttpFake {
     );
   }
 
-  expect(request) {
+  expect(url, request) {
+    'use strict';
+
+    if(typeof url === 'string')
+      this._queues.urlsExpected.enqueue(url);
+    
+    if(typeof url === 'object') {
+      this._setExpected(url);
+      return;
+    }
+
+    this._setExpected(request);
+  }
+
+  _setExpected(request) {
     'use strict';
 
     if (typeof request.body !== 'undefined') 
@@ -42,6 +56,15 @@ class HttpFake {
 
     this._queues.optionsExpected.enqueue(request);
   }
+
+  // expect(request) {
+  //   'use strict';
+
+  //   if (typeof request.body !== 'undefined') 
+  //     this._queues.bodiesExpected.enqueue(request.body);
+
+  //   this._queues.optionsExpected.enqueue(request);
+  // }
 
   returns(response) {
     'use strict';
@@ -61,24 +84,27 @@ class HttpFake {
     this._queues.requestErrors.enqueue(error);
   }
 
-  request(options, callback) {
+  request(url, options, callback) {
     'use strict';
 
-    this._saveOptions(options);
+    if(typeof url === 'string')
+      this._queues.urlsActual.enqueue(url);
+
+    if(typeof url === 'object')
+      this._queues.optionsActual.enqueue(url);
+
+    if(typeof options === 'function'){
+      this._queues.callbacks.enqueue(options);
+      return this._makeRequest();
+    }
+
+    if(typeof options === 'object')
+      this._queues.optionsActual.enqueue(options);
 
     if (typeof callback === 'function')
       this._queues.callbacks.enqueue(callback);
     
     return this._makeRequest();
-  }
-
-  _saveOptions(options) {
-    'use strict';
-
-    if ((typeof options) !== 'object')
-      throw new Error('options should be an object!');
-
-    this._queues.optionsActual.enqueue(options);
   }
 
   _makeRequest() {

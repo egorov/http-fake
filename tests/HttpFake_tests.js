@@ -253,6 +253,41 @@ describe('HttpFake', () => {
     clientRequest.end();
   });
 
+  it('should imitate GET request with url and options', (done) => {
+
+    const url = 'http://localhost/api/login';
+    const opts = {
+      auth: 'jack:example',
+      method: 'GET'
+    };
+
+    http.expect(url, opts);
+    http.returns({ statusCode: 200, statusMessage: 'OK', body: 'key=value' });
+
+    const clientRequest = http.request(url, opts);
+    
+    clientRequest.on('response', (res) => {
+
+      expect(res.statusCode).toEqual(200);
+      expect(res.statusMessage).toEqual('OK');
+
+      let incomingData = '';
+
+      res.on('data', (chunk) => {
+
+        incomingData += chunk;
+      });
+
+      res.on('end', () => {
+
+        expect(incomingData).toEqual('key=value');
+        done();
+      });
+    });
+
+    clientRequest.end();
+  });
+
   it('should emit response error', (done) => {
 
     http.expect(options);
@@ -297,14 +332,6 @@ describe('HttpFake', () => {
     };
     const msg = 'Expected options.hostname == localhost, actual is ::1!';
     expect(method).toThrowError(AssertionError, msg);
-  });
-
-  it('request should throw if options is omitted', () => {
-
-    const method = () => {
-      http.request();
-    };
-    expect(method).toThrow(new Error('options should be an object!'));
   });
 
   it('should make expressjs response fake', () => {
