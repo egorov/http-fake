@@ -156,6 +156,103 @@ describe('HttpFake', () => {
     clientRequest.end();
   });
 
+  it('should imitate GET request with callback', (done) => {
+
+    const opts = Object.assign({}, options);
+    opts.method = 'GET';
+    delete opts.body;
+
+    http.expect(opts);
+    http.returns({ statusCode: 200, statusMessage: 'OK' });
+
+    const clientRequest = http.request(opts, (res) => {
+
+      expect(res.statusCode).toEqual(200);
+      expect(res.statusMessage).toEqual('OK');
+
+      let incomingData = '';
+
+      res.on('data', (chunk) => {
+
+        incomingData += chunk;
+      });
+
+      res.on('end', () => {
+
+        expect(incomingData).toEqual('');
+        done();
+      });
+    });
+
+    clientRequest.end();
+  });
+
+  it('should imitate GET request with response callback', (done) => {
+
+    const opts = Object.assign({}, options);
+    opts.method = 'GET';
+    delete opts.body;
+
+    http.expect(opts);
+    http.returns({ statusCode: 200, statusMessage: 'OK' });
+
+    const clientRequest = http.request(opts);
+    
+    clientRequest.on('response', (res) => {
+
+      expect(res.statusCode).toEqual(200);
+      expect(res.statusMessage).toEqual('OK');
+
+      let incomingData = '';
+
+      res.on('data', (chunk) => {
+
+        incomingData += chunk;
+      });
+
+      res.on('end', () => {
+
+        expect(incomingData).toEqual('');
+        done();
+      });
+    });
+
+    clientRequest.end();
+  });
+
+  it('should imitate GET request with text response body', (done) => {
+
+    const opts = Object.assign({}, options);
+    opts.method = 'GET';
+    delete opts.body;
+
+    http.expect(opts);
+    http.returns({ statusCode: 200, statusMessage: 'OK', body: 'key=value' });
+
+    const clientRequest = http.request(opts);
+    
+    clientRequest.on('response', (res) => {
+
+      expect(res.statusCode).toEqual(200);
+      expect(res.statusMessage).toEqual('OK');
+
+      let incomingData = '';
+
+      res.on('data', (chunk) => {
+
+        incomingData += chunk;
+      });
+
+      res.on('end', () => {
+
+        expect(incomingData).toEqual('key=value');
+        done();
+      });
+    });
+
+    clientRequest.end();
+  });
+
   it('should emit response error', (done) => {
 
     http.expect(options);
