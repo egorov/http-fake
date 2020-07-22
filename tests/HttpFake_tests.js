@@ -321,6 +321,21 @@ describe('HttpFake', () => {
     clientRequest.end();
   });
 
+  it('should fall if url does not match', (done) => {
+
+    http.expect('http://localhost', {method: 'GET'});
+    http.returns(response);
+
+    const method = () => {
+      const clientRequest = http.request('http://stub', {method: 'GET'}, () => { 
+        done();
+      });
+      clientRequest.end();
+    };
+    const msg = 'Expected url http://localhost, but actual url is http://stub';
+    expect(method).toThrowError(AssertionError, msg);
+  });
+
   it('should fall if options does not match', () => {
 
     http.expect(options);

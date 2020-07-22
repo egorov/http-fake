@@ -4,6 +4,7 @@ const ClientRequestFake = require('./ClientRequestFake'),
   RequestErrorCommand = require('./RequestErrorCommand'),
   OptionsMatchCommand = require('./RequestOptionsMatchCommand'),
   RequestBodyMatchHandler = require('./RequestBodyMatchHandler'),
+  RequestUrlMatchCheck = require('./RequestUrlCheckCommand'),
   ExpressResponseFake = require('./ExpressResponseFake'),
   Storage = require('./Queues');
 
@@ -19,13 +20,17 @@ class HttpFake {
       this._queues.responseErrors,
       this._queues.callbacks);
 
+    this._urlCheck = new RequestUrlMatchCheck(
+      this._queues.urlsExpected,
+      this._queues.urlsActual);
+
     this._optionsMatchCommand = new OptionsMatchCommand(
       this._queues.optionsExpected,
       this._queues.optionsActual);
 
     this._bodyMatchHandler = new RequestBodyMatchHandler(
       this._queues.bodiesExpected);
-
+      
     this._request = new ClientRequestFake(this._queues);
 
     this._requestErrorCommand = new RequestErrorCommand(
@@ -56,15 +61,6 @@ class HttpFake {
 
     this._queues.optionsExpected.enqueue(request);
   }
-
-  // expect(request) {
-  //   'use strict';
-
-  //   if (typeof request.body !== 'undefined') 
-  //     this._queues.bodiesExpected.enqueue(request.body);
-
-  //   this._queues.optionsExpected.enqueue(request);
-  // }
 
   returns(response) {
     'use strict';
@@ -116,6 +112,9 @@ class HttpFake {
     const requestHandler = this._handleWithRequest.bind(this);
     this._request.on('end', requestHandler);
 
+    const urlCheck = this._urlCheck.execute.bind(this._urlCheck);
+    this._request.on('end', urlCheck);
+    
     const bodyCheckHandler =
       this._bodyMatchHandler.handle.bind(this._bodyMatchHandler);
     this._request.on('write', bodyCheckHandler);
