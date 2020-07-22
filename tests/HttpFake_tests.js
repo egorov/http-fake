@@ -92,6 +92,40 @@ describe('HttpFake', () => {
     clientRequest.end();
   });
 
+  it('should deal with plain text body', (done) => {
+
+    const optns = Object.assign({}, options);
+    optns.body = 'login=jack&password=example';
+
+    http.expect(optns);
+    http.returns(response);
+
+    const clientRequest = http.request(optns);
+
+    clientRequest.on('response', (res) => {
+
+      expect(res.headers).toEqual(response.headers);
+      expect(res.statusCode).toEqual(response.statusCode);
+
+      let incomingData = '';
+
+      res.on('data', (chunk) => {
+
+        incomingData += chunk;
+      });
+
+      res.on('end', () => {
+
+        const body = JSON.parse(incomingData);
+        expect(body).toEqual(response.body);
+        done();
+      });
+    });
+
+    clientRequest.write(optns.body);
+    clientRequest.end();
+  });
+
   it('should deal with empty POST body request', (done) => {
 
     const opts = Object.assign({}, options);

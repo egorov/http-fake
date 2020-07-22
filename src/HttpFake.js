@@ -37,10 +37,9 @@ class HttpFake {
   expect(request) {
     'use strict';
 
-    if ((typeof request.body) !== 'undefined') {
-      const body = request.body;
-      this._queues.bodiesExpected.enqueue(body);
-    }
+    if (typeof request.body !== 'undefined') 
+      this._queues.bodiesExpected.enqueue(request.body);
+
     this._queues.optionsExpected.enqueue(request);
   }
 

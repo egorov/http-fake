@@ -1,22 +1,24 @@
 const assert = require('assert');
 
 class RequestBodyMatchHandler {
-    constructor(expectedBodies){
-        this._expected = expectedBodies;
-    }
+  constructor(expectedBodies) {
+    this._expected = expectedBodies;
+  }
 
-    handle(actual){
-        'use strict';
+  handle(actual) {
+    'use strict';
 
-        let body;
+    let expected;
 
-        if(typeof actual !== 'undefined')
-            body = this._expected.dequeue();
+    if (typeof actual !== 'undefined')
+      expected = this._expected.dequeue();
 
-        const expected = JSON.stringify(body);
-        const msg = `Expected body content ${expected}, but actual content is ${actual}`;
-        assert.equal(expected, actual, msg);
-    }
+    if(typeof expected === 'object')
+      expected = JSON.stringify(expected);
+
+    const msg = `Expected body content ${expected}, but actual content is ${actual}`;
+    assert.equal(expected, actual, msg);
+  }
 }
 
 module.exports = RequestBodyMatchHandler;
