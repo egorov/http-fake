@@ -23,8 +23,6 @@ class ClientRequestFake extends EventEmitter {
 
     this._queues.callbacks.enqueue(this._events.response);
   }
-
-  setEncoding() {}
 }
 
 module.exports = ClientRequestFake;

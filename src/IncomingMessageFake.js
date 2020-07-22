@@ -18,6 +18,8 @@ class IncomingMessageFake extends EventEmitter {
   get statusMessage() {
     return this._content.statusMessage;
   }
+
+  setEncoding() {}
 }
 
 module.exports = IncomingMessageFake
