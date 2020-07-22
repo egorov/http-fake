@@ -2,7 +2,13 @@
   "name": "http-fake",
   "version": "0.0.11",
   "description": "Fake implementation for use instead of Node.js http.request in unit tests",
-  "keywords": ["node.js", "http", "request", "fake", "mock"],
+  "keywords": [
+    "node.js",
+    "http",
+    "request",
+    "fake",
+    "mock"
+  ],
   "main": "index.js",
   "repository": "https://github.com/egorov/http-fake.git",
   "author": {

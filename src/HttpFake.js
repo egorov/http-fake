@@ -1,124 +1,117 @@
 const ClientRequestFake = require('./ClientRequestFake'),
-    ResponseSendCommand = require('./ResponseSendCommand'),
-    ResponseErrorCommand = require('./ResponseErrorCommand'),
-    RequestErrorCommand = require('./RequestErrorCommand'),
-    OptionsMatchCommand = require('./RequestOptionsMatchCommand'),
-    RequestBodyMatchHandler = require('./RequestBodyMatchHandler'),
-    ExpressResponseFake = require('./ExpressResponseFake'),
-    Storage = require('./Queues');
+  ResponseSendCommand = require('./ResponseSendCommand'),
+  ResponseErrorCommand = require('./ResponseErrorCommand'),
+  RequestErrorCommand = require('./RequestErrorCommand'),
+  OptionsMatchCommand = require('./RequestOptionsMatchCommand'),
+  RequestBodyMatchHandler = require('./RequestBodyMatchHandler'),
+  ExpressResponseFake = require('./ExpressResponseFake'),
+  Storage = require('./Queues');
 
 class HttpFake {
 
-    constructor(){
+  constructor() {
 
-        this._queues = new Storage();
+    this._queues = new Storage();
 
-        this._responseSendCommand = new ResponseSendCommand(this._queues);
+    this._responseSendCommand = new ResponseSendCommand(this._queues);
 
-        this._responseErrorCommand = new ResponseErrorCommand(
-            this._queues.responseErrors,
-            this._queues.callbacks);
+    this._responseErrorCommand = new ResponseErrorCommand(
+      this._queues.responseErrors,
+      this._queues.callbacks);
 
-        this._optionsMatchCommand = new OptionsMatchCommand(
-            this._queues.optionsExpected,
-            this._queues.optionsActual);
+    this._optionsMatchCommand = new OptionsMatchCommand(
+      this._queues.optionsExpected,
+      this._queues.optionsActual);
 
-        this._bodyMatchHandler = new RequestBodyMatchHandler(
-            this._queues.bodiesExpected);
+    this._bodyMatchHandler = new RequestBodyMatchHandler(
+      this._queues.bodiesExpected);
 
-        this._request = new ClientRequestFake();
+    this._request = new ClientRequestFake(this._queues);
 
-        this._requestErrorCommand = new RequestErrorCommand(
-            this._queues.requestErrors,
-            this._request
-        );
+    this._requestErrorCommand = new RequestErrorCommand(
+      this._queues.requestErrors,
+      this._request
+    );
+  }
+
+  expect(request) {
+    'use strict';
+
+    if ((typeof request.body) !== 'undefined') {
+      const body = request.body;
+      this._queues.bodiesExpected.enqueue(body);
     }
+    this._queues.optionsExpected.enqueue(request);
+  }
 
-    expect(request){
-        'use strict';
+  returns(response) {
+    'use strict';
 
-        if((typeof request.body) !== 'undefined'){
-            const body = request.body;
-            this._queues.bodiesExpected.enqueue(body);
-        }
-        this._queues.optionsExpected.enqueue(request);
-    }
+    this._queues.responsesExpected.enqueue(response);
+  }
 
-    returns(response){
-        'use strict';
+  responseThrow(error) {
+    'use strict';
 
-        this._queues.responsesExpected.enqueue(response);
-    }
+    this._queues.responseErrors.enqueue(error);
+  }
 
-    responseThrow(error){
-        'use strict';
+  requestThrow(error) {
+    'use strict';
 
-        this._queues.responseErrors.enqueue(error);
-    }
+    this._queues.requestErrors.enqueue(error);
+  }
 
-    requestThrow(error){
-        'use strict';
+  request(options, callback) {
+    'use strict';
 
-        this._queues.requestErrors.enqueue(error);
-    }
+    this._saveOptions(options);
 
-    request(options, callback){
-        'use strict';
+    if (typeof callback === 'function')
+      this._queues.callbacks.enqueue(callback);
+    
+    return this._makeRequest();
+  }
 
-        this._saveOptions(options);
-        this._saveCallback(callback);
+  _saveOptions(options) {
+    'use strict';
 
-        return this._makeRequest();
-    }
+    if ((typeof options) !== 'object')
+      throw new Error('options should be an object!');
 
-    _saveOptions(options){
-        'use strict';
+    this._queues.optionsActual.enqueue(options);
+  }
 
-        if((typeof options) !== 'object')
-            throw new Error('options should be an object!');
+  _makeRequest() {
+    'use strict';
 
-        this._queues.optionsActual.enqueue(options);
-    }
+    this._request.removeAllListeners('end');
+    this._request.removeAllListeners('write');
 
-    _saveCallback(callback){
-        'use strict';
+    const requestHandler = this._handleWithRequest.bind(this);
+    this._request.on('end', requestHandler);
 
-        if((typeof callback) !== 'function')
-            throw new Error('callback is required argument!')
+    const bodyCheckHandler =
+      this._bodyMatchHandler.handle.bind(this._bodyMatchHandler);
+    this._request.on('write', bodyCheckHandler);
 
-        this._queues.callbacks.enqueue(callback);
-    }
+    return this._request;
+  }
 
-    _makeRequest(){
-        'use strict';
+  _handleWithRequest() {
+    'use strict';
 
-        this._request.removeAllListeners('end');
-        this._request.removeAllListeners('write');
-      
-        const requestHandler = this._handleWithRequest.bind(this);
-        this._request.on('end', requestHandler);
+    this._responseSendCommand.execute();
+    this._requestErrorCommand.execute();
+    this._responseErrorCommand.execute();
+    this._optionsMatchCommand.execute();
+  }
 
-        const bodyCheckHandler =
-            this._bodyMatchHandler.handle.bind(this._bodyMatchHandler);
-        this._request.on('write', bodyCheckHandler);
+  static makeExpressResponseFake() {
+    'use strict';
 
-        return this._request;
-    }
-
-    _handleWithRequest(){
-        'use strict';
-
-        this._responseSendCommand.execute();
-        this._requestErrorCommand.execute();
-        this._responseErrorCommand.execute();
-        this._optionsMatchCommand.execute();
-    }
-
-    static makeExpressResponseFake(){
-        'use strict';
-
-        return new ExpressResponseFake();
-    }
+    return new ExpressResponseFake();
+  }
 }
 
 module.exports = HttpFake;

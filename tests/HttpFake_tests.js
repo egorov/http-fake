@@ -1,160 +1,186 @@
 describe('HttpFake', () => {
 
-    const AssertionError = require('assert').AssertionError;
-    const HttpFake = require('../src/HttpFake'),
-        options = {
-            hostname: 'localhost',
-            port: 80,
-            path: '/api/users/login',
-            body: {
-                login: 'jack',
-                password: 'P@ssw0rd'
-            },
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        },
-        response = {
-            statusCode: 200,
-            body: {
-                token: 'value is here'
-            },
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        };
-    let http = null;
+  const AssertionError = require('assert').AssertionError;
+  const HttpFake = require('../src/HttpFake'),
+    options = {
+      hostname: 'localhost',
+      port: 80,
+      path: '/api/users/login',
+      body: {
+        login: 'jack',
+        password: 'P@ssw0rd'
+      },
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    },
+    response = {
+      statusCode: 200,
+      body: {
+        token: 'value is here'
+      },
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    };
+  let http = null;
 
-    beforeEach(() => {
-       http = new HttpFake();
+  beforeEach(() => {
+    http = new HttpFake();
+  });
+
+  it('should deal with request callback', (done) => {
+
+    http.expect(options);
+    http.returns(response);
+
+    const clientRequest = http.request(options, (res) => {
+
+      expect(res.headers).toEqual(response.headers);
+      expect(res.statusCode).toEqual(response.statusCode);
+
+      let incomingData = '';
+
+      res.on('data', (chunk) => {
+
+        incomingData += chunk;
+      });
+
+      res.on('end', () => {
+
+        const body = JSON.parse(incomingData);
+        expect(body).toEqual(response.body);
+        done();
+      });
     });
 
-    it('should return expected response', () => {
+    const content = JSON.stringify(options.body);
+    clientRequest.write(content);
+    clientRequest.end();
+  });
 
-        http.expect(options);
-        http.returns(response);
+  it('should deal with response callback', (done) => {
 
-        const clientRequest = http.request(options, (res) => {
+    http.expect(options);
+    http.returns(response);
 
-            expect(res.headers).toEqual(response.headers);
-            expect(res.statusCode).toEqual(response.statusCode);
+    const clientRequest = http.request(options);
 
-            let incomingData = '';
+    clientRequest.on('response', (res) => {
 
-            res.on('data', (chunk) => {
+      expect(res.headers).toEqual(response.headers);
+      expect(res.statusCode).toEqual(response.statusCode);
 
-                incomingData += chunk;
-            });
+      let incomingData = '';
 
-            res.on('end', () => {
+      res.on('data', (chunk) => {
 
-                const body = JSON.parse(incomingData);
-                expect(body).toEqual(response.body);
-            });
-        });
+        incomingData += chunk;
+      });
 
-        const content = JSON.stringify(options.body);
-        clientRequest.write(content);
-        clientRequest.end();
+      res.on('end', () => {
+
+        const body = JSON.parse(incomingData);
+        expect(body).toEqual(response.body);
+        done();
+      });
     });
 
-    it('should deal with empty POST body request', () => {
+    const content = JSON.stringify(options.body);
+    clientRequest.write(content);
+    clientRequest.end();
+  });
 
-        const opts = Object.assign({}, options);
-        delete opts.body;
-        
-        http.expect(opts);
-        http.returns({ statusCode: 200 });
+  it('should deal with empty POST body request', (done) => {
 
-        const clientRequest = http.request(opts, (res) => {
+    const opts = Object.assign({}, options);
+    delete opts.body;
 
-            expect(res.statusCode).toEqual(response.statusCode);
+    http.expect(opts);
+    http.returns({ statusCode: 200 });
 
-            let incomingData = '';
+    const clientRequest = http.request(opts, (res) => {
 
-            res.on('data', (chunk) => {
+      expect(res.statusCode).toEqual(response.statusCode);
 
-                incomingData += chunk;
-            });
+      let incomingData = '';
 
-            res.on('end', () => {
+      res.on('data', (chunk) => {
 
-                expect(incomingData).toEqual('');
-            });
-        });
+        incomingData += chunk;
+      });
 
-        clientRequest.write();
-        clientRequest.end();
+      res.on('end', () => {
+
+        expect(incomingData).toEqual('');
+        done();
+      });
     });
 
-    it('should emit response error', (done) => {
+    clientRequest.write();
+    clientRequest.end();
+  });
 
-        http.expect(options);
-        http.responseThrow(new Error('Something goes wrong!'));
+  it('should emit response error', (done) => {
 
-        const clientRequest = http.request(options, (res) => {
+    http.expect(options);
+    http.responseThrow(new Error('Something goes wrong!'));
 
-            res.on('error', (error) => {
+    const clientRequest = http.request(options, (res) => {
 
-                expect(error.message).toEqual('Something goes wrong!');
-                done();
-            });
-        });
+      res.on('error', (error) => {
 
-        clientRequest.end();
+        expect(error.message).toEqual('Something goes wrong!');
+        done();
+      });
     });
 
-    it('should emit request error', (done) => {
+    clientRequest.end();
+  });
 
-        const msg = 'Something goes wrong!';
-        http.expect(options);
-        http.requestThrow(new Error(msg));
+  it('should emit request error', (done) => {
 
-        const clientRequest = http.request(options, (res) => {});
-        clientRequest.on('error', (error) => {
+    const msg = 'Something goes wrong!';
+    http.expect(options);
+    http.requestThrow(new Error(msg));
 
-            expect(error.message).toEqual(msg);
-            done();
-        });
+    const clientRequest = http.request(options, () => { });
+    clientRequest.on('error', (error) => {
 
-        clientRequest.end();
+      expect(error.message).toEqual(msg);
+      done();
     });
 
-    it('should fall if options does not match', () => {
+    clientRequest.end();
+  });
 
-        http.expect(options);
-        http.returns(response);
+  it('should fall if options does not match', () => {
 
-        const method = () =>{
-            const clientRequest = http.request({ hostname: '::1'},(res) => {});
-            clientRequest.end();
-        };
-        const msg = 'Expected options.hostname == localhost, actual is ::1!';
-        expect(method).toThrowError(AssertionError, msg);
-    });
+    http.expect(options);
+    http.returns(response);
 
-    it('request should throw if options is omitted', () => {
+    const method = () => {
+      const clientRequest = http.request({ hostname: '::1' }, () => { });
+      clientRequest.end();
+    };
+    const msg = 'Expected options.hostname == localhost, actual is ::1!';
+    expect(method).toThrowError(AssertionError, msg);
+  });
 
-        const method = () => {
-            http.request();
-        };
-        expect(method).toThrow(new Error('options should be an object!'));
-    });
+  it('request should throw if options is omitted', () => {
 
-    it('request should throw if callback is omitted', () => {
+    const method = () => {
+      http.request();
+    };
+    expect(method).toThrow(new Error('options should be an object!'));
+  });
 
-        const method = () => {
-            http.request({});
-        };
-        expect(method).toThrow(new Error('callback is required argument!'));
-    });
+  it('should make expressjs response fake', () => {
 
-    it('should make expressjs response fake', () => {
+    const res = HttpFake.makeExpressResponseFake();
 
-        const res = HttpFake.makeExpressResponseFake();
-
-        expect(typeof res.send).toEqual('function');
-        expect(typeof res.status).toEqual('function');
-    });
+    expect(typeof res.send).toEqual('function');
+    expect(typeof res.status).toEqual('function');
+  });
 });
